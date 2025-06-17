@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SecureBank - Administrative Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: auto;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-icon {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #ffffff, #e5e7eb);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e40af;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    .header-title {
+      color: #ffffff;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .header-subtitle {
+      color: #cbd5e1;
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      color: #1f2937;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: white;
+    }
+
+    .stat-icon.transactions { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-icon.accounts { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-icon.security { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .stat-icon.system { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .stat-change {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .stat-change.positive {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .stat-change.negative {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .main-panel, .side-panel {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .panel-icon {
+      color: #3b82f6;
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 1rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-blocked { background: #fee2e2; color: #991b1b; }
+
+    /* Alert Panel */
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid #ef4444;
+    }
+
+    .alert-icon {
+      color: #ef4444;
+      margin-top: 0.125rem;
+    }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .alert-description {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert-time {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Loading Animation */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      
+      .user-section {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 0 1rem;
+      }
+      
+      .quick-stats {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo-icon">
+          <i class="fas fa-university"></i>
+        </div>
+        <div>
+          <div class="header-title">SecureBank Administrative Portal</div>
+          <div class="header-subtitle">Core Banking System v2.8.4</div>
+        </div>
+      </div>
+      
+      <div class="user-section">
+        <div class="system-status">
+          <div class="status-dot"></div>
+          <span>All Systems Operational</span>
+        </div>
+        
+        <div class="user-info">
+          <div class="user-avatar">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div>
+            <div style="font-weight: 600;">System Administrator</div>
+            <div style="font-size: 0.75rem; opacity: 0.8;">Level 5 Access</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon transactions">
+            <i class="fas fa-exchange-alt"></i>
+          </div>
+          <div class="stat-change positive">+12.5%</div>
+        </div>
+        <div class="stat-value">$847.2M</div>
+        <div class="stat-label">Daily Transaction Volume</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon accounts">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-change positive">+847</div>
+        </div>
+        <div class="stat-value">284,592</div>
+        <div class="stat-label">Active Customer Accounts</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon security">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <div class="stat-change negative">+23</div>
+        </div>
+        <div class="stat-value">156</div>
+        <div class="stat-label">Security Alerts (24h)</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon system">
+            <i class="fas fa-server"></i>
+          </div>
+          <div class="stat-change positive">99.8%</div>
+        </div>
+        <div class="stat-value">99.97%</div>
+        <div class="stat-label">System Uptime</div>
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Main Panel -->
+      <div class="main-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fas fa-database panel-icon"></i>
+            Recent High-Value Transactions
+          </h2>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Account</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#TXN-847291</td>
+              <td>****-****-****-2847</td>
+              <td>$2,450,000.00</td>
+              <td>Wire Transfer</td>
+              <td><span class="status-badge status-active">Completed</span></td>
+              <td>14:23:47</td>
+            </tr>
+            <tr>
+              <td>#TXN-847290</td>
+              <td>****-****-****-8392</td>
+              <td>$890,750.00</td>
+              <td>ACH Transfer</td>
+              <td><span class="status-badge status-pending">Processing</span></td>
+              <td>14:21:33</td>
+            </tr>
+            <tr>
+              <td>#TXN-847289</td>
+              <td>****-****-****-1567</td>
+              <td>$1,250,000.00</td>
+              <td>International</td>
+              <td><span class="status-badge status-active">Completed</span></td>
+              <td>14:18:12</td>
+            </tr>
+            <tr>
+              <td>#TXN-847288</td>
+              <td>****-****-****-9823</td>
+              <td>$567,890.00</td>
+              <td>Investment</td>
+              <td><span class="status-badge status-blocked">Flagged</span></td>
+              <td>14:15:55</td>
+            </tr>
+            <tr>
+              <td>#TXN-847287</td>
+              <td>****-****-****-4471</td>
+              <td>$3,200,000.00</td>
+              <td>Corporate</td>
+              <td><span class="status-badge status-active">Completed</span></td>
+              <td>14:12:18</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="action-buttons">
+          <a href="#" class="btn btn-primary">
+            <i class="fas fa-download"></i>
+            Export Transactions
+          </a>
+          <a href="#" class="btn btn-secondary">
+            <i class="fas fa-filter"></i>
+            Advanced Filters
+          </a>
+          <a href="#" class="btn btn-danger">
+            <i class="fas fa-ban"></i>
+            Freeze Suspicious Accounts
+          </a>
+        </div>
+      </div>
+
+      <!-- Side Panel -->
+      <div class="side-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fas fa-exclamation-triangle panel-icon"></i>
+            Critical Alerts
+          </h2>
+        </div>
+        
+        <div class="alert-item">
+          <i class="fas fa-exclamation-triangle alert-icon"></i>
+          <div class="alert-content">
+            <div class="alert-title">Unusual Access Pattern Detected</div>
+            <div class="alert-description">Multiple failed login attempts from IP: 203.0.113.45</div>
+            <div class="alert-time">2 minutes ago</div>
+          </div>
+        </div>
+        
+        <div class="alert-item">
+          <i class="fas fa-shield-alt alert-icon"></i>
+          <div class="alert-content">
+            <div class="alert-title">Large Transaction Pending Review</div>
+            <div class="alert-description">Wire transfer of $5.2M requires manual approval</div>
+            <div class="alert-time">8 minutes ago</div>
+          </div>
+        </div>
+        
+        <div class="alert-item">
+          <i class="fas fa-server alert-icon"></i>
+          <div class="alert-content">
+            <div class="alert-title">Database Backup Completed</div>
+            <div class="alert-description">Nightly backup finished successfully (2.4TB)</div>
+            <div class="alert-time">15 minutes ago</div>
+          </div>
+        </div>
+        
+        <div class="alert-item">
+          <i class="fas fa-lock alert-icon"></i>
+          <div class="alert-content">
+            <div class="alert-title">Security Certificate Renewal</div>
+            <div class="alert-description">SSL certificate expires in 30 days</div>
+            <div class="alert-time">1 hour ago</div>
+          </div>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+          <a href="#" class="btn btn-primary" style="width: 100%; justify-content: center;">
+            <i class="fas fa-bell"></i>
+            View All Alerts
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Actions -->
+    <div style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+      <h2 style="color: #1f2937; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-tools" style="color: #3b82f6;"></i>
+        Administrative Tools
+      </h2>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-key"></i>
+          Reset User Passwords
+        </a>
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-database"></i>
+          Database Maintenance
+        </a>
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-chart-line"></i>
+          Generate Reports
+        </a>
+        <a href="#" class="btn btn-danger">
+          <i class="fas fa-power-off"></i>
+          Emergency Shutdown
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simulate real-time updates
+    function updateStats() {
+      const statValues = document.querySelectorAll('.stat-value');
+      statValues.forEach(stat => {
+        const currentValue = stat.textContent;
+        if (currentValue.includes('$')) {
+          // Simulate transaction volume changes
+          const randomChange = (Math.random() - 0.5) * 0.02;
+          const numValue = parseFloat(currentValue.replace(/[$,M]/g, ''));
+          const newValue = (numValue * (1 + randomChange)).toFixed(1);
+          stat.textContent = `$${newValue}M`;
+        }
+      });
+    }
+
+    // Update stats every 30 seconds
+    setInterval(updateStats, 30000);
+
+    // Add loading states to buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const originalText = this.innerHTML;
+        this.innerHTML = '<div class="loading-spinner"></div> Processing...';
+        this.style.pointerEvents = 'none';
+        
+        setTimeout(() => {
+          this.innerHTML = originalText;
+          this.style.pointerEvents = 'auto';
+        }, 3000);
+      });
+    });
+
+    // Simulate new alerts
+    function addAlert() {
+      const alerts = [
+        {
+          icon: 'fas fa-credit-card',
+          title: 'Credit Card Fraud Detected',
+          description: 'Suspicious transactions on card ending in 4829',
+          time: 'Just now'
+        },
+        {
+          icon: 'fas fa-user-times',
+          title: 'Account Locked',
+          description: 'Customer account locked due to suspicious activity',
+          time: '1 minute ago'
+        }
+      ];
+      
+      const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+      const alertContainer = document.querySelector('.side-panel');
+      const newAlert = document.createElement('div');
+      newAlert.className = 'alert-item';
+      newAlert.style.opacity = '0';
+      newAlert.style.transform = 'translateY(-10px)';
+      
+      newAlert.innerHTML = `
+        <i class="${randomAlert.icon} alert-icon"></i>
+        <div class="alert-content">
+          <div class="alert-title">${randomAlert.title}</div>
+          <div class="alert-description">${randomAlert.description}</div>
+          <div class="alert-time">${randomAlert.time}</div>
+        </div>
+      `;
+      
+      alertContainer.insertBefore(newAlert, alertContainer.children[1]);
+      
+      // Animate in
+      setTimeout(() => {
+        newAlert.style.transition = 'all 0.3s ease';
+        newAlert.style.opacity = '1';
+        newAlert.style.transform = 'translateY(0)';
+      }, 100);
+    }
+
+    // Add random alerts every 2-5 minutes
+    setInterval(addAlert, Math.random() * 180000 + 120000);
+  </script>
+</body>
+</html>
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(45deg, #ff6b6b, #feca57);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h2 {
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+    }
+
+    .sensitive-data {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1.5rem;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      color: #00ff88;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+    }
+
+    .warning {
+      background: rgba(255, 193, 7, 0.2);
+      border: 1px solid rgba(255, 193, 7, 0.5);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00d4ff;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .blinking {
+      animation: blink 2s linear infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    .loading-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .loading-progress {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4ff, #ff6b6b);
+      animation: loading 3s ease-in-out infinite;
+    }
+
+    @keyframes loading {
+      0% { width: 0%; }
+      50% { width: 100%; }
+      100% { width: 0%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>🏦 SecureBank Admin Portal</h1>
+      <div class="user-info">
+        <span>Welcome, Administrator</span>
+        <div class="user-avatar">A</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="dashboard-grid">
+      <div class="card">
+        <h2><span class="card-icon">🔐</span>Encrypted Database Access</h2>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number">2,847</span>
+            <span class="stat-label">Active Records</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">99.9%</span>
+            <span class="stat-label">Uptime</span>
+          </div>
+        </div>
+        <div class="warning">
+          <span>⚠️</span>
+          <span>High-security data requires additional authentication</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="card-icon">💳</span>Payment Card Database</h2>
+        <p style="margin-bottom: 1rem;">Encrypted payment information (PCI DSS Level 1 Compliant)</p>
+        <div class="sensitive-data">
+          ENCRYPTED_CARD_DATA_BLOCK_001:<br/>
+          4a7d1ed414474e4033ac29ccb8653d9b2f8e1a<br/>
+          7b9c7e1234ab56cd78ef90ab12cd34ef9a7b8c<br/>
+          c3d4e5678f9012ab34cd56ef7890ab129c8d7e<br/>
+          1234abcd5678ef901234abcd5678ef906f5a4b<br/>
+          a1b2c3d4e5f67890123456789abcdef08e9f0a<br/>
+          <span class="blinking">█</span>
+        </div>
+        <div class="loading-bar">
+          <div class="loading-progress"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="card-icon">📊</span>Transaction Monitoring</h2>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number">$1.2M</span>
+            <span class="stat-label">Daily Volume</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">156</span>
+            <span class="stat-label">Flagged Transactions</span>
+          </div>
+        </div>
+        <p style="margin-top: 1rem; opacity: 0.8;">Real-time fraud detection and monitoring system active.</p>
+      </div>
+
+      <div class="card">
+        <h2><span class="card-icon">🛡️</span>Security Status</h2>
+        <div class="sensitive-data">
+          SYSTEM_STATUS: SECURE<br/>
+          FIREWALL: ACTIVE<br/>
+          INTRUSION_DETECTION: ONLINE<br/>
+          LAST_BACKUP: 2025-06-15 03:00:00<br/>
+          ENCRYPTION_LEVEL: AES-256<br/>
+          <span style="color: #ff6b6b;">THREAT_LEVEL: ELEVATED</span><br/>
+          <span class="blinking">MONITORING...</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        setTimeout(() => {
+          card.style.opacity = '0.9';
+        }, index * 200);
+      });
+    }, 500);
+  </script>
+</body>
+</html>

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />    <title>Alpha - Honeypot Threat Intelligence Solution</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Source+Code+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }        body {
+            font-family: 'JetBrains Mono', 'Source Code Pro', 'Consolas', monospace;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 75%, #475569 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            font-weight: 400;
+        }.header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 3px solid #1d4ed8;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }        .subtitle {
+            font-size: 1.2rem;
+            color: #e0e7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }        .tabs {
+            display: flex;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem 2rem;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            border: 1px solid #1d4ed8;
+        }
+
+        .tab:hover:not(.active) {
+            background: #334155;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }        .stat-card {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #3b82f6;
+        }.stat-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #3b82f6;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1e40af;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }        .stat-label {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }        .analytics-card {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .analytics-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #3b82f6;
+        }
+
+        .analytics-card h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .top-list {
+            list-style: none;
+        }        .top-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: #334155;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            transition: all 0.2s ease;
+            color: #e2e8f0;
+        }
+
+        .top-list li:hover {
+            background: #475569;
+            transform: translateX(3px);
+        }
+
+        .top-list li:nth-child(1) { border-left-color: #dc2626; }
+        .top-list li:nth-child(2) { border-left-color: #f59e0b; }
+        .top-list li:nth-child(3) { border-left-color: #3b82f6; }.chart-container {
+            height: 300px;
+            margin-top: 1rem;
+            position: relative;
+        }        .map-section {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-section h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #60a5fa;
+            font-weight: 600;
+        }        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }        .recent-attacks {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }        .attack-item {
+            background: #334155;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            transition: all 0.2s ease;
+            border: 1px solid #475569;
+        }
+
+        .attack-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: #475569;
+        }
+
+        .attack-item.attacker {
+            border-left-color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .attack-item.normal_user {
+            border-left-color: #059669;
+            background: rgba(5, 150, 105, 0.1);
+        }        .attack-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            color: #e2e8f0;
+        }
+
+        .attack-details {
+            font-family: 'JetBrains Mono', 'Source Code Pro', monospace;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            background: #1e293b;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #334155;
+        }.threat-level {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .threat-high { 
+            background: #dc2626; 
+            color: white; 
+        }
+        .threat-medium { 
+            background: #f59e0b; 
+            color: white; 
+        }
+        .threat-low { 
+            background: #059669; 
+            color: white; 
+        }        .last-update {
+            text-align: center;
+            margin-top: 1rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #94a3b8;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats-overview, .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>    <div class="header">
+        <h1><i class="fas fa-shield-alt"></i> Alpha - Honeypot Threat Intelligence Solution</h1>
+        <p class="subtitle">
+            <i class="fas fa-eye"></i>
+            Attack Analysis Platform Powered by AI
+        </p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('overview')">
+                <i class="fas fa-chart-line"></i>
+                Overview
+            </div>
+            <div class="tab" onclick="showTab('analytics')">
+                <i class="fas fa-brain"></i>
+                Deep Analytics
+            </div>
+            <div class="tab" onclick="showTab('intelligence')">
+                <i class="fas fa-globe"></i>
+                Threat Intel
+            </div>
+            <div class="tab" onclick="showTab('realtime')">
+                <i class="fas fa-bolt"></i>
+                Live Feed
+            </div>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-crosshairs"></i></div>
+                    <span class="stat-number" id="total-attempts">{{ stats.total_attempts }}</span>
+                    <span class="stat-label">Total Attack Attempts</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-network-wired"></i></div>
+                    <span class="stat-number" id="unique-ips">{{ stats.unique_ips }}</span>
+                    <span class="stat-label">Unique IP Addresses</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user-ninja"></i></div>
+                    <span class="stat-number" id="attacker-count">{{ stats.attacker_count }}</span>
+                    <span class="stat-label">Confirmed Attackers</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                    <span class="stat-number" id="success-rate">0%</span>
+                    <span class="stat-label">Attack Detection Rate</span>
+                </div>
+            </div>
+
+            <div class="map-section">
+                <h2><i class="fas fa-globe-americas"></i> Global Attack Origins</h2>
+                <div id="map"></div>
+                <div class="last-update">
+                    Last updated: <span id="last-update">Loading...</span>
+                </div>
+            </div>
+        </div>        <!-- Deep Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-user-cog"></i> Top Usernames</h3>
+                    <ul class="top-list" id="top-usernames">
+                        <li class="loading">Loading analytics...</li>
+                    </ul>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-key"></i> Top Passwords</h3>
+                    <ul class="top-list" id="top-passwords">
+                        <li class="loading">Loading analytics...</li>
+                    </ul>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-search"></i> Credential Patterns</h3>
+                    <div id="credential-patterns">
+                        <div class="loading">Analyzing patterns...</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-pie"></i> Attack Statistics</h3>
+                    <div id="attack-statistics">
+                        <div class="loading">Generating statistics...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Threat Intelligence Tab -->
+        <div id="intelligence" class="tab-content">
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-flag"></i> Attacks by Country</h3>
+                    <ul class="top-list" id="country-attacks">
+                        <li class="loading">Loading threat intelligence...</li>
+                    </ul>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-redo"></i> Persistent Attackers</h3>
+                    <ul class="top-list" id="persistent-attackers">
+                        <li class="loading">Identifying repeat offenders...</li>
+                    </ul>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Threat Summary</h3>
+                    <div id="threat-summary">
+                        <div class="loading">Generating threat assessment...</div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-shield-virus"></i> Attack Vectors</h3>
+                    <div id="attack-vectors">
+                        <div class="loading">Analyzing attack methods...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Feed Tab -->
+        <div id="realtime" class="tab-content">
+            <div class="recent-attacks">
+                <h3><i class="fas fa-stream"></i> Live Attack Feed</h3>
+                <div id="recent-attacks-list">
+                    <div class="loading">Loading recent attacks...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let markers = [];
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Load data for specific tabs
+            if (tabName === 'analytics') {
+                loadAnalytics();
+            } else if (tabName === 'intelligence') {
+                loadThreatIntelligence();
+            } else if (tabName === 'realtime') {
+                loadRecentAttacks();
+            }
+        }
+
+        function initMap() {
+            map = L.map('map').setView([20, 0], 2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            var attackerLocations = {{ attacker_locations | tojson }};
+            updateMapMarkers(attackerLocations);
+        }
+
+        function updateMapMarkers(locations) {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            locations.forEach(function(loc) {
+                if (loc.lat && loc.lon) {
+                    var marker = L.marker([loc.lat, loc.lon])
+                        .addTo(map)
+                        .bindPopup(`
+                            <div style="color: #333;">
+                                <b>🚨 Attacker IP:</b> ${loc.ip}<br>
+                                <b>📍 Country:</b> ${loc.country}<br>
+                                <b>🔍 Status:</b> <span style="color: #d63031;">Active Threat</span>
+                            </div>
+                        `);
+                    markers.push(marker);
+                }
+            });
+        }
+
+        function updateStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-attempts').textContent = data.total_attempts;
+                    document.getElementById('unique-ips').textContent = data.unique_ips;
+                    document.getElementById('attacker-count').textContent = data.attacker_count;
+                    document.getElementById('last-update').textContent = new Date().toLocaleString();
+                })
+                .catch(error => console.error('Error updating stats:', error));
+        }
+
+        function loadAnalytics() {
+            fetch('/api/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    // Update success rate
+                    document.getElementById('success-rate').textContent = data.basic_stats.success_rate + '%';
+                    
+                    // Update top usernames
+                    const usernamesList = document.getElementById('top-usernames');
+                    usernamesList.innerHTML = '';
+                    Object.entries(data.top_usernames).slice(0, 5).forEach(([username, count]) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span>${username}</span><span class="pulse">${count} attempts</span>`;
+                        usernamesList.appendChild(li);
+                    });
+
+                    // Update top passwords
+                    const passwordsList = document.getElementById('top-passwords');
+                    passwordsList.innerHTML = '';
+                    Object.entries(data.top_passwords).slice(0, 5).forEach(([password, count]) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span>${password}</span><span class="pulse">${count} attempts</span>`;
+                        passwordsList.appendChild(li);
+                    });
+
+                    // Update credential patterns
+                    const patternsDiv = document.getElementById('credential-patterns');
+                    patternsDiv.innerHTML = `
+                        <p><i class="fas fa-chart-line"></i> Avg Username Length: <strong>${data.credential_patterns.avg_username_length}</strong></p>
+                        <p><i class="fas fa-chart-line"></i> Avg Password Length: <strong>${data.credential_patterns.avg_password_length}</strong></p>
+                        <div style="margin-top: 1rem;">
+                            <h4>Common Patterns:</h4>
+                            ${data.credential_patterns.common_username_patterns.map(p => `<p>• ${p}</p>`).join('')}
+                            ${data.credential_patterns.common_password_patterns.map(p => `<p>• ${p}</p>`).join('')}
+                        </div>                    `;
+
+                    // Update attack statistics
+                    const attackStatsDiv = document.getElementById('attack-statistics');
+                    
+                    // Process hourly data
+                    const hourlyData = data.attacks_by_hour || {};
+                    const dailyData = data.attacks_by_day || {};
+                    
+                    if (Object.keys(hourlyData).length > 0) {
+                        // Calculate stats
+                        const totalAttacks = Object.values(hourlyData).reduce((a, b) => a + b, 0);
+                        const maxHourlyAttacks = Math.max(...Object.values(hourlyData));
+                        const peakHour = Object.entries(hourlyData).reduce((a, b) => b[1] > a[1] ? b : a)[0];
+                        const avgAttacksPerHour = Math.round(totalAttacks / 24 * 10) / 10;
+                        
+                        // Calculate additional stats
+                        const minHourlyAttacks = Math.min(...Object.values(hourlyData));
+                        const activeDays = Object.keys(dailyData).length;
+                        const totalDaily = Object.values(dailyData).reduce((a, b) => a + b, 0);
+                        const avgAttacksPerDay = activeDays > 0 ? Math.round(totalDaily / activeDays * 10) / 10 : 0;
+                        
+                        attackStatsDiv.innerHTML = `
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="padding: 0.75rem; background: rgba(255,107,107,0.1); border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: #ff6b6b;">${totalAttacks}</div>
+                                    <div style="font-size: 0.9rem; opacity: 0.8;">Total Attacks (24h)</div>
+                                </div>
+                                <div style="padding: 0.75rem; background: rgba(255,193,7,0.1); border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: #ffc107;">${peakHour}:00</div>
+                                    <div style="font-size: 0.9rem; opacity: 0.8;">Peak Attack Hour</div>
+                                </div>
+                                <div style="padding: 0.75rem; background: rgba(78,205,196,0.1); border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: #4ecdc4;">${avgAttacksPerHour}</div>
+                                    <div style="font-size: 0.9rem; opacity: 0.8;">Avg Attacks/Hour</div>
+                                </div>
+                                <div style="padding: 0.75rem; background: rgba(150,206,180,0.1); border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: #96ceb4;">${maxHourlyAttacks}</div>
+                                    <div style="font-size: 0.9rem; opacity: 0.8;">Peak Hour Attacks</div>
+                                </div>
+                            </div>
+                            <div style="padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-chart-bar"></i> Activity Summary</h4>
+                                <p><i class="fas fa-clock"></i> Most active hour: <strong>${peakHour}:00</strong> with <strong>${maxHourlyAttacks}</strong> attacks</p>
+                                <p><i class="fas fa-calendar-day"></i> Total active days: <strong>${activeDays}</strong></p>
+                                <p><i class="fas fa-trending-up"></i> Average attacks per day: <strong>${avgAttacksPerDay}</strong></p>
+                                <p><i class="fas fa-shield-alt"></i> Detection accuracy: <strong>${data.basic_stats.success_rate}%</strong></p>
+                            </div>
+                        `;
+                    } else {
+                        attackStatsDiv.innerHTML = `
+                            <div class="loading">
+                                <i class="fas fa-chart-pie"></i><br>
+                                No attack statistics available yet.<br>
+                                <small>Statistics will appear as attacks are logged.</small>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => console.error('Error loading analytics:', error));
+        }
+
+        function loadThreatIntelligence() {
+            fetch('/api/threat-intelligence')
+                .then(response => response.json())
+                .then(data => {
+                    // Update country attacks
+                    const countryList = document.getElementById('country-attacks');
+                    countryList.innerHTML = '';
+                    Object.entries(data.attacks_by_country).slice(0, 5).forEach(([country, count]) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span>🏴 ${country}</span><span class="threat-high">${count} attacks</span>`;
+                        countryList.appendChild(li);
+                    });
+
+                    // Update persistent attackers
+                    const persistentList = document.getElementById('persistent-attackers');
+                    persistentList.innerHTML = '';
+                    Object.entries(data.persistent_attackers).slice(0, 5).forEach(([ip, count]) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span>🔥 ${ip}</span><span class="threat-high">${count} attempts</span>`;
+                        persistentList.appendChild(li);
+                    });
+
+                    // Update threat summary
+                    const summaryDiv = document.getElementById('threat-summary');
+                    summaryDiv.innerHTML = `
+                        <div style="padding: 1rem; background: rgba(255,107,107,0.1); border-radius: 8px; margin-bottom: 1rem;">
+                            <h4><i class="fas fa-globe"></i> Geographic Distribution</h4>
+                            <p>Attacks detected from <strong>${data.total_countries}</strong> countries</p>
+                            <p>Most active region: <strong>${data.most_active_country}</strong></p>
+                        </div>
+                    `;
+                })
+                .catch(error => console.error('Error loading threat intelligence:', error));
+        }
+
+        function loadRecentAttacks() {
+            fetch('/api/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    const attacksList = document.getElementById('recent-attacks-list');
+                    attacksList.innerHTML = '';
+                    
+                    data.recent_attacks.forEach(attack => {
+                        const div = document.createElement('div');
+                        div.className = `attack-item ${attack.classification}`;
+                        
+                        const threatLevel = attack.classification === 'attacker' ? 'threat-high' : 'threat-low';
+                        const threatText = attack.classification === 'attacker' ? 'HIGH RISK' : 'LOW RISK';
+                        
+                        div.innerHTML = `
+                            <div class="attack-meta">
+                                <span><i class="fas fa-clock"></i> ${attack.timestamp}</span>
+                                <span class="threat-level ${threatLevel}">${threatText}</span>
+                            </div>
+                            <div class="attack-details">
+                                <i class="fas fa-map-marker-alt"></i> ${attack.ip} (${attack.location})<br>
+                                <i class="fas fa-user"></i> Username: ${attack.username}<br>
+                                <i class="fas fa-key"></i> Password: ${attack.password}
+                            </div>
+                        `;
+                        attacksList.appendChild(div);
+                    });
+                })
+                .catch(error => console.error('Error loading recent attacks:', error));
+        }
+
+        // Initialize dashboard
+        initMap();
+        
+        // Set initial timestamp
+        document.getElementById('last-update').textContent = new Date().toLocaleString();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            updateStats();
+            if (document.getElementById('realtime').classList.contains('active')) {
+                loadRecentAttacks();
+            }
+        }, 30000);
+
+        // Load initial analytics
+        loadAnalytics();
+    </script>
+</body>
+</html>
