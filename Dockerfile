@@ -56,7 +56,28 @@ RUN mkdir -p /app && \
     echo "[]" > ip_cache.json
 
 # Try to run setup script, but don't fail the build if it has issues
-RUN python setup.py 2>/dev/null || echo "Setup completed with warnings"
+RUN python -c "
+import os, csv, json
+# Create .env if not exists
+if not os.path.exists('.env'):
+    with open('.env', 'w') as f:
+        f.write('SECRET_KEY=docker-honeypot-secret-key\\n')
+        f.write('HOST=0.0.0.0\\n')
+        f.write('PORT=5000\\n')
+        f.write('DEBUG=False\\n')
+        f.write('RETRAIN_THRESHOLD=10\\n')
+
+# Create initial logs.csv with headers
+if not os.path.exists('logs.csv') or os.path.getsize('logs.csv') == 0:
+    with open('logs.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['timestamp', 'ip', 'username', 'password', 'classification'])
+        # Add some sample data for ML model
+        writer.writerow(['2025-06-15 10:00:00', '192.168.1.100', 'admin', 'password123', 'normal_user'])
+        writer.writerow(['2025-06-15 10:15:00', '203.0.113.45', 'admin', 'admin', 'attacker'])
+
+print('Docker initialization completed!')
+" || echo "Setup completed with basic initialization"
 
 # Expose port
 EXPOSE 5000
