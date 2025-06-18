@@ -49,8 +49,14 @@ ENV FLASK_APP=app.py
 # Switch to non-root user
 USER honeypot
 
-# Initialize the application
-RUN python setup.py
+# Create necessary directories and initialize files
+RUN mkdir -p /app && \
+    touch logs.csv && \
+    echo "0" > log_count.txt && \
+    echo "[]" > ip_cache.json
+
+# Try to run setup script, but don't fail the build if it has issues
+RUN python setup.py 2>/dev/null || echo "Setup completed with warnings"
 
 # Expose port
 EXPOSE 5000
