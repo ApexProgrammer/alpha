@@ -76,9 +76,20 @@ alpha/
 ├── requirements.txt       # Dependencies
 ├── retrain_model.py       # ML model retraining
 ├── templates/             # HTML templates
-├── tests/                 # Test suite
 └── README-images/         # Documentation images
 ```
+
+## Business Use Cases
+
+Organizations can deploy this honeypot with minimal modifications to strengthen their cybersecurity:
+
+- **Early Threat Detection**: Deploy alongside production systems to identify attackers before they reach critical assets
+- **Threat Intelligence**: Gather real-time data on attack patterns, techniques, and geographic origins for security team analysis
+- **Incident Response**: Use attack logs and behavioral data to improve security policies and response procedures
+- **Security Awareness**: Demonstrate active threats to stakeholders and justify security investments
+- **Network Segmentation Testing**: Validate that attackers cannot move laterally from compromised honeypot systems
+
+Simply customize the login interface to match your organization's branding and integrate with existing SIEM/logging infrastructure for enterprise deployment.
 
 ## Contributing
 
@@ -87,8 +98,6 @@ alpha/
 3. Commit changes (`git commit -m 'Add feature'`)
 4. Push to branch (`git push origin feature/name`)
 5. Open a Pull Request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
